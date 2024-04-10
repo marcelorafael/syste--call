@@ -1,18 +1,26 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import useAuth from '../../hooks/useAuth';
+
 import logo from '../../assets/logo.png'
 
 export default function SignUp() {
+  const { signUp, loadingAuth } = useAuth();
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  function handleSubmit(e: any){
+  async function handleSubmit(e: any) {
     e.preventDefault();
 
-    if(name !== '' && email !== '' && password !== '') {
-      alert("fazer cadastro")
+    if (name !== '' && email !== '' && password !== '') {
+      await signUp(name, email, password);
+
+      setName('')
+      setEmail('')
+      setPassword('')
     }
   }
 
@@ -41,13 +49,15 @@ export default function SignUp() {
           />
 
           <input
-            type="text"
+            type="password"
             placeholder='******'
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
 
-          <button type="submit">Cadastrar</button>
+          <button type="submit" disabled={loadingAuth} style={{ backgroundColor: loadingAuth && 'gray', cursor: loadingAuth && 'not-allowed' }}>
+            {!loadingAuth ? 'Cadastrar' : 'Carregando...'}
+          </button>
         </form>
 
         <Link to='/'>Já possui uma conta? Faça login</Link>

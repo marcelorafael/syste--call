@@ -6,12 +6,16 @@ export default function useAuth() {
     const {
         signed,
         user,
-        signIn
+        loadingAuth,
+        signIn,
+        signUp,
     }: any = useContext(AuthContext);
 
     return {
         signed,
         user,
-        signIn
+        loadingAuth,
+        signIn,
+        signUp,
     }
 }
