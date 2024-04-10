@@ -8,6 +8,14 @@ export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  function handleSubmit(e: any){
+    e.preventDefault();
+
+    if(name !== '' && email !== '' && password !== '') {
+      alert("fazer cadastro")
+    }
+  }
+
 
   return (
     <div className="container-center">
@@ -16,13 +24,13 @@ export default function SignUp() {
           <img src={logo} alt='logo to call system' />
         </div>
 
-        <form action="">
+        <form onSubmit={handleSubmit}>
           <h1>Nova Conta</h1>
           <input
             type="text"
             placeholder='Seu nome'
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
           />
 
           <input

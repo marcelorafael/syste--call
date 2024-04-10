@@ -4,9 +4,22 @@ import './styles.css'
 import { Link } from 'react-router-dom';
 
 import logo from '../../assets/logo.png'
+
+import useAuth from '../../hooks/useAuth';
 export default function SignIn() {
+  const { signed,signIn } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+
+  function handleSubmit(e: any){
+    e.preventDefault();
+
+    if (email !== '' && password !== '') {
+      signIn(email, password)
+    }
+  }
 
 
   return (
@@ -16,7 +29,7 @@ export default function SignIn() {
           <img src={logo} alt='logo to call system' />
         </div>
 
-        <form action="">
+        <form onSubmit={handleSubmit}>
           <h1>Entrar</h1>
           <input
             type="text"
@@ -26,7 +39,7 @@ export default function SignIn() {
           />
 
           <input
-            type="text"
+            type="password"
             placeholder='******'
             value={password}
             onChange={(event) => setPassword(event.target.value)}
