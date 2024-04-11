@@ -5,6 +5,10 @@ import useAuth from '../../hooks/useAuth';
 
 import logo from '../../assets/logo.png'
 
+import { toast } from 'react-toastify';
+
+import Toastify from '../../components/Toastify';
+
 export default function SignUp() {
   const { signUp, loadingAuth } = useAuth();
 
@@ -12,12 +16,23 @@ export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+
+  const notify = (type: 'error' | 'sucess') => {
+    type === 'sucess' ? toast.success("Usuário cadastrado com sucesso!!!") : toast.error("Erro ao cadastrar!!!")
+  }
+
   async function handleSubmit(e: any) {
     e.preventDefault();
 
     if (name !== '' && email !== '' && password !== '') {
-      await signUp(name, email, password);
 
+      try {
+        await signUp(name, email, password);
+        notify('sucess')
+      } catch (error) {
+        notify('error')
+      }
+      
       setName('')
       setEmail('')
       setPassword('')
@@ -32,8 +47,10 @@ export default function SignUp() {
           <img src={logo} alt='logo to call system' />
         </div>
 
+        
         <form onSubmit={handleSubmit}>
           <h1>Nova Conta</h1>
+
           <input
             type="text"
             placeholder='Seu nome'
@@ -62,6 +79,7 @@ export default function SignUp() {
 
         <Link to='/'>Já possui uma conta? Faça login</Link>
       </div>
+      <Toastify />
     </div>
   );
 }

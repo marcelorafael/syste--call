@@ -7,15 +7,23 @@ export default function useAuth() {
         signed,
         user,
         loadingAuth,
+        loading,
         signIn,
         signUp,
+        logout,
+        storageUser,
+        setUser,
     }: any = useContext(AuthContext);
 
     return {
         signed,
         user,
         loadingAuth,
+        loading,
         signIn,
         signUp,
+        logout,
+        storageUser,
+        setUser,
     }
 }

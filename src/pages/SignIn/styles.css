@@ -61,6 +61,12 @@ form button{
     font-size: 1.3rem;
 }
 
+form button:hover{
+    background-color: #181c2e;
+    opacity: 0.9;
+}
+
+
 .login a {
     margin: 1.5rem 0;
     color: #000;

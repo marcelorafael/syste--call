@@ -1,23 +1,33 @@
 import { useState } from 'react';
 import './styles.css'
 
+import Toastify from '../../components/Toastify';
+import { toast } from 'react-toastify';
+
 import { Link } from 'react-router-dom';
 
 import logo from '../../assets/logo.png'
 
 import useAuth from '../../hooks/useAuth';
 export default function SignIn() {
-  const { signed,signIn } = useAuth();
+  const { signed, signIn, loadingAuth } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
 
-  function handleSubmit(e: any){
+  async function handleSubmit(e: any) {
     e.preventDefault();
 
     if (email !== '' && password !== '') {
-      signIn(email, password)
+      
+        const result = await signIn(email, password);
+
+        if(result?.name === 'FirebaseError'){
+          toast.error('Erro no login, verique seu email e senha!!!')
+          return
+        }
+      
     }
   }
 
@@ -45,11 +55,19 @@ export default function SignIn() {
             onChange={(event) => setPassword(event.target.value)}
           />
 
-          <button type="submit">Acessar</button>
+          <button
+            type="submit"
+            style={{
+              backgroundColor: loadingAuth && 'gray',
+              cursor: loadingAuth && 'not-allowed'
+            }}
+            disabled={loadingAuth ? true : false}
+          >{!loadingAuth ? 'Acessar' : 'Carregando...'}</button>
         </form>
 
         <Link to='/register'>Criar uma conta</Link>
       </div>
+      <Toastify />
     </div>
   );
 }
