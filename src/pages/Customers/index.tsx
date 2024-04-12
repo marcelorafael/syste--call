@@ -5,16 +5,42 @@ import Title from "../../components/Title";
 import './styles.css'
 import { useState } from "react";
 
+import { db } from "../../services/firebaseConn";
+import { addDoc, collection } from "firebase/firestore";
+import Toastify from "../../components/Toastify";
+import { toast } from 'react-toastify'
+
 
 export default function Customers() {
-    const [name, setName] = useState('')
+    const [companyName, setCompanyName] = useState('')
     const [cnpj, setCnpj] = useState('')
     const [address, setAddress] = useState('')
 
-    function handleRegister(e: any){
+    async function handleRegister(e: any) {
         e.preventDefault()
 
-        alert('teste')
+        if (companyName !== '' && cnpj !== '' && address !== '') {
+            await addDoc(collection(db, 'customers'), {
+                companyName: companyName,
+                cnpj: cnpj,
+                address: address,
+            })
+                .then(() => {
+                    setCompanyName('')
+                    setCnpj('')
+                    setAddress('')
+
+                    toast.success('Empresa cadastrada com sucesso!')
+                })
+                .catch((error) => {
+                    console.log('Erro de cadastro de empresa: ',error)
+                    toast.error('Erro ao cadastrar empresa.!')
+                })
+
+
+        } else {
+            toast.error('Prrencha todos os campos!')
+        }
     }
 
 
@@ -32,8 +58,8 @@ export default function Customers() {
                         <input
                             type="text"
                             placeholder="Nome da empresa"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            value={companyName}
+                            onChange={(e) => setCompanyName(e.target.value)}
                         />
 
                         <label>CNPJ</label>
@@ -58,6 +84,8 @@ export default function Customers() {
                     </form>
                 </div>
             </div>
+
+            <Toastify />
 
         </div>
     );
