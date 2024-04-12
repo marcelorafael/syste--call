@@ -2,7 +2,7 @@ import React, { useState, useEffect, createContext } from "react";
 
 import { db, auth } from "../services/firebaseConn";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { addDoc, collection, doc, getDoc, setDoc } from 'firebase/firestore'
 
 import { useNavigate } from "react-router-dom";
 
@@ -105,6 +105,17 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
     }
 
+    async function registerCustomers(companyName: string, cnpj: string, address: string) {
+
+        await addDoc(collection(db, 'customers'), {
+            companyName: companyName,
+            cnpj: cnpj,
+            address: address,
+        })
+
+
+    }
+
     return (
         <AuthContext.Provider value={{
             signed: !!user,
@@ -116,6 +127,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             logout,
             storageUser,
             setUser,
+            registerCustomers,
         }}>
             {children}
         </AuthContext.Provider>
