@@ -1,6 +1,11 @@
 import './title.css';
 
-export default function Title({ children, name }: any){
+export interface TitleProps {
+  children: React.ReactElement,
+  name: string
+}
+
+export default function Title({ children, name }: TitleProps){
   return(
     <div className="title">
       {children}
