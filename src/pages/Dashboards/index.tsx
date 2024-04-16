@@ -6,16 +6,16 @@ import Title from "../../components/Title";
 
 import './styles.css'
 
-import { useEffect } from "react";
-
 import useAuth from "../../hooks/useAuth";
 
 import { FiMessageSquare, FiPlus, FiSearch, FiEdit2 } from 'react-icons/fi'
 import { Link } from "react-router-dom";
 
+import useToast from "../../hooks/useToast";
+
 export default function Dashboards() {
   const { logout } = useAuth();
-  const notify = () => toast('Seja bem-vindo ao sistema!')
+  const { notifyError, notifySuccess } = useToast();
 
   async function handleLogout() {
     await logout()
@@ -27,7 +27,8 @@ export default function Dashboards() {
       <Sidebar />
       <h1>Dashboard</h1>
       <button onClick={handleLogout}>Sair</button>
-      <Toastify />
+
+      {/* <Toastify /> */}
 
       <div className="content">
         <Title name="Tickets">
@@ -35,7 +36,7 @@ export default function Dashboards() {
         </Title>
 
         <>
-          <Link to='new' className="new">
+          <Link to='/newTicket' className="new">
             <FiPlus color="#fff" size={25} />
             Novo chamado
           </Link>
@@ -55,7 +56,7 @@ export default function Dashboards() {
                 <td data-label='Cliente'> Mercado esquina</td>
                 <td data-label='Suporte'> Suporte</td>
                 <td data-label='Status'>
-                  <span className="badge" style={{ backgroundColor: '#999'}}>
+                  <span className="badge" style={{ backgroundColor: '#999' }}>
                     Em aberto
                   </span>
                 </td>
