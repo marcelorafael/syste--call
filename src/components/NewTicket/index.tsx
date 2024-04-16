@@ -5,21 +5,17 @@ import Title from "../Title";
 import { FiPlusCircle } from 'react-icons/fi'
 
 import './styles.css'
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import useAuth from "../../hooks/useAuth";
-import { collection, getDocs, getDoc, doc } from "firebase/firestore";
-import { db } from "../../services/firebaseConn";
-
-const listRef = collection(db, 'customers')
 
 
 const NewTicket = () => {
-  const { user } = useAuth();
+  const { customers, loadCustomers } = useAuth();
 
-  const [customers, setCustomers] = useState<any>([]);
+  
   const [customersSelected, setCustomersSelected] = useState<any>(0);
-  const [loadCustomers, setLoadCustomers] = useState(true);
+
   const [complement, setComplement] = useState('');
   const [topic, setTopic] = useState('Suporte');
   const [status, setStatus] = useState('Aberto');
@@ -33,43 +29,11 @@ const NewTicket = () => {
     setTopic(e.target.value);
   }
 
-  async function getCustomers() {
-    const querySnapshot = await getDocs(listRef)
-      .then((snapshot) => {
-        let list: any = [];
-
-        snapshot.forEach((doc) => {
-          list.push({
-            id: doc.id,
-            companyName: doc.data().companyName
-          })
-        })
-
-        if (snapshot.docs.length === 0) {
-          console.log('Nenhum cliente encontrado.')
-          setCustomers([{ id: 1, nomeFantasia: 'Freela' }])
-          setLoadCustomers(false)
-          return
-        }
-
-        setCustomers(list)
-        setLoadCustomers(false)
-
-      })
-      .catch((error) => {
-        console.log('Erro ao buscar os clientes', error)
-        setLoadCustomers(false);
-        setCustomers([{ id: 1, nomeFantasia: 'Freela' }])
-      })
-  }
 
   function handleChangeCustomers(e: any) {
     setCustomersSelected(e.target.value)
   }
 
-  useEffect(() => {
-    getCustomers()
-  }, [])
 
   return (
     <div>
