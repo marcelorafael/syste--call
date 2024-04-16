@@ -7,6 +7,7 @@ import Profile from "../pages/Profile";
 import Customers from "../pages/Customers";
 
 import Private from "./Private";
+import NewTicket from "../components/NewTicket";
 
 export default function RoutesApp() {
   return (
@@ -14,8 +15,9 @@ export default function RoutesApp() {
       <Route path="/" element={<SignIn />} />
       <Route path="/register" element={<SignUp />} />
       <Route path="/dashboards" element={<Private> <Dashboards /> </Private>} />
-      <Route path="/Profile" element={<Private> <Profile /> </Private>} />
-      <Route path="/Customers" element={<Private> <Customers /> </Private>} />
+      <Route path="/profile" element={<Private> <Profile /> </Private>} />
+      <Route path="/customers" element={<Private> <Customers /> </Private>} />
+      <Route path="/NewTicket" element={<Private> <NewTicket /> </Private>} />
     </Routes>
   );
 } 

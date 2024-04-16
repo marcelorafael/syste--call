@@ -16,8 +16,9 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import Toastify from '../../components/Toastify'
 import { toast } from 'react-toastify'
 
+
 export default function Profile() {
-  const { user, storageUser, setUser, logout } = useAuth();
+  const { user, storageUser, setUser, logout, editProfile, } = useAuth();
 
   const [name, setName] = useState(user && user.name)
   const [email, setEmail] = useState(user && user.email)
@@ -75,29 +76,36 @@ export default function Profile() {
   async function handleSubmit(e: any) {
     e.preventDefault()
 
-    if (imageAvatar === null && name !== '') {
-
-      const docRef = doc(db, 'users', user?.uid)
-      updateDoc(docRef, {
-        name: name
-      })
-        .then(() => {
-          let data = {
-            ...user,
-            name: name
-          }
-
-          setUser(data)
-          storageUser(data)
-
-          toast.success('Mudança feita com sucesso')
-        })
-        .catch(() => {
-          toast.error('Desculpe, aconteceu algum erro.')
-        })
-    } else if (name !== '' && imageAvatar !== null) {
-      handleUpload()
+    try {
+      editProfile(imageAvatar, name)
+      toast.success('Mudança feita com sucesso')
+    } catch (error) {
+      toast.error('Desculpe, aconteceu algum erro.')
     }
+
+    // if (imageAvatar === null && name !== '') {
+
+    //   const docRef = doc(db, 'users', user?.uid)
+    //   updateDoc(docRef, {
+    //     name: name
+    //   })
+    //     .then(() => {
+    //       let data = {
+    //         ...user,
+    //         name: name
+    //       }
+
+    //       setUser(data)
+    //       storageUser(data)
+
+    //       toast.success('Mudança feita com sucesso')
+    //     })
+    //     .catch(() => {
+    //       toast.error('Desculpe, aconteceu algum erro.')
+    //     })
+    // } else if (name !== '' && imageAvatar !== null) {
+    //   handleUpload()
+    // }
   }
 
   return (

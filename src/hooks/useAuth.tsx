@@ -13,6 +13,8 @@ export default function useAuth() {
         logout,
         storageUser,
         setUser,
+        registerCustomers,
+        editProfile,
     }: any = useContext(AuthContext);
 
     return {
@@ -25,5 +27,7 @@ export default function useAuth() {
         logout,
         storageUser,
         setUser,
+        registerCustomers,
+        editProfile,
     }
 }

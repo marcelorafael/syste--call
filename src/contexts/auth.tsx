@@ -1,10 +1,11 @@
 import React, { useState, useEffect, createContext } from "react";
 
-import { db, auth } from "../services/firebaseConn";
+import { db, auth, storage } from "../services/firebaseConn";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { addDoc, collection, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
 
 import { useNavigate } from "react-router-dom";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 export const AuthContext = createContext({});
 
@@ -105,6 +106,75 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
     }
 
+    async function registerCustomers(companyName: string, cnpj: string, address: string) {
+
+        await addDoc(collection(db, 'customers'), {
+            companyName: companyName,
+            cnpj: cnpj,
+            address: address,
+        })
+
+
+    }
+
+    async function handleUpload(imageAvatar: any, name: string) {
+        const currentUid = user?.uid;
+    
+        const uploadRef = ref(storage, `images/${currentUid}/${imageAvatar?.name}`)
+    
+        const uploadTask = uploadBytes(uploadRef, imageAvatar)
+          .then((snapshot) => {
+            getDownloadURL(snapshot.ref).then(async (downloadURL) => {
+              let urlPhoto = downloadURL;
+    
+              const docRef = doc(db, 'users', user?.uid)
+              await updateDoc(docRef, {
+                avatarUrl: urlPhoto,
+                name: name,
+              }).then(() => {
+                let data = {
+                  ...user,
+                  name: name,
+                  avatarUrl: urlPhoto
+                }
+    
+                setUser(data)
+                storageUser(data)
+    
+              })
+            })
+          })
+          .catch((error) => {
+            console.log('Error uploadoc: ', error)
+          })
+      }
+    
+      async function editProfile(imageAvatar: any, name: string) {
+    
+        if (imageAvatar === null && name !== '') {
+    
+          const docRef = doc(db, 'users', user?.uid)
+          updateDoc(docRef, {
+            name: name
+          })
+            .then(() => {
+              let data = {
+                ...user,
+                name: name
+              }
+    
+              setUser(data)
+              storageUser(data)
+    
+            })
+            .catch((error) => {
+                console.log('error edit profile: ',error)
+            })
+        } else if (name !== '' && imageAvatar !== null) {
+          handleUpload(imageAvatar, name)
+        }
+      }
+
     return (
         <AuthContext.Provider value={{
             signed: !!user,
@@ -116,6 +186,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             logout,
             storageUser,
             setUser,
+            registerCustomers,
+            editProfile,
         }}>
             {children}
         </AuthContext.Provider>

@@ -10,8 +10,12 @@ import { addDoc, collection } from "firebase/firestore";
 import Toastify from "../../components/Toastify";
 import { toast } from 'react-toastify'
 
+import useAuth from "../../hooks/useAuth";
+
 
 export default function Customers() {
+    const { registerCustomers } = useAuth();
+
     const [companyName, setCompanyName] = useState('')
     const [cnpj, setCnpj] = useState('')
     const [address, setAddress] = useState('')
@@ -20,23 +24,17 @@ export default function Customers() {
         e.preventDefault()
 
         if (companyName !== '' && cnpj !== '' && address !== '') {
-            await addDoc(collection(db, 'customers'), {
-                companyName: companyName,
-                cnpj: cnpj,
-                address: address,
-            })
-                .then(() => {
-                    setCompanyName('')
-                    setCnpj('')
-                    setAddress('')
 
-                    toast.success('Empresa cadastrada com sucesso!')
-                })
-                .catch((error) => {
-                    console.log('Erro de cadastro de empresa: ',error)
-                    toast.error('Erro ao cadastrar empresa.!')
-                })
-
+            try {
+                registerCustomers(companyName, cnpj, address)
+                setCompanyName('')
+                setCnpj('')
+                setAddress('')
+                toast.success('Empresa cadastrada com sucesso!')
+            } catch (error) {
+                console.log('Error register customers: ', error)
+                toast.error('Erro ao cadastrar empresa.!')
+            }
 
         } else {
             toast.error('Prrencha todos os campos!')
