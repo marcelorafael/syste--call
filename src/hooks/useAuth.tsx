@@ -17,6 +17,7 @@ export default function useAuth() {
         setUser,
         registerCustomers,
         editProfile,
+        registerTicket,
     }: any = useContext(AuthContext);
 
     return {
@@ -33,5 +34,6 @@ export default function useAuth() {
         setUser,
         registerCustomers,
         editProfile,
+        registerTicket,
     }
 }

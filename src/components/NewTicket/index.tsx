@@ -8,12 +8,15 @@ import './styles.css'
 import { useState } from "react";
 
 import useAuth from "../../hooks/useAuth";
+import { addDoc, collection } from "firebase/firestore";
+import { toast } from "react-toastify";
+import { db } from "../../services/firebaseConn";
 
 
 const NewTicket = () => {
-  const { customers, loadCustomers } = useAuth();
+  const { user, customers, loadCustomers, registerTicket } = useAuth();
 
-  
+
   const [customersSelected, setCustomersSelected] = useState<any>(0);
 
   const [complement, setComplement] = useState('');
@@ -34,6 +37,41 @@ const NewTicket = () => {
     setCustomersSelected(e.target.value)
   }
 
+  async function handleRegisterTicket(e: any) {
+    e.preventDefault();
+
+    try {
+      await registerTicket(customersSelected, topic, complement, status)
+
+      toast.success("Chamado registrado!")
+      setComplement('')
+      setCustomersSelected(0)
+    } catch (error) {
+      console.log('Erro a registrar chamado!', error)
+      toast.error("Ops erro ao registrar, tente mais tarde!")
+    }
+
+    //Registrar um chamado
+    // await addDoc(collection(db, "chamados"), {
+    //   created: new Date(),
+    //   client: customers[customersSelected].companyName,
+    //   clientId: customers[customersSelected].id,
+    //   topic: topic,
+    //   complement: complement,
+    //   status: status,
+    //   userId: user?.uid
+    // })
+    //   .then(() => {
+    //     toast.success("Chamado registrado!")
+    //     setComplement('')
+    //     setCustomersSelected(0)
+    //   })
+    //   .catch((error) => {
+    //     toast.error("Ops erro ao registrar, tente mais tarde!")
+    //     console.log(error);
+    //   })
+  }
+
 
   return (
     <div>
@@ -46,7 +84,7 @@ const NewTicket = () => {
 
         <div className="container">
 
-          <form className="form-profile">
+          <form className="form-profile" onSubmit={handleRegisterTicket}>
 
             <label>Clientes</label>
             {
@@ -107,7 +145,11 @@ const NewTicket = () => {
               placeholder="Descreva seu problema (Opcional)"
             />
 
-            <button type="submit">Registrar</button>
+            <button type="submit" style={{backgroundColor: loadCustomers && 'gray'}} disabled={loadCustomers}>
+              {
+                loadCustomers ? 'Carregando...' : 'Registrar'
+              }
+            </button>
 
           </form>
 

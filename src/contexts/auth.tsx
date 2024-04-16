@@ -193,6 +193,28 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       })
   }
 
+  async function registerTicket(customersSelected: number, topic: string, complement: string, status: string) {
+    setLoadCustomers(true);
+    return new Promise(async (resolve, reject) => {
+      
+      const result = await addDoc(collection(db, "tickets"), {
+        created: new Date(),
+        client: customers[customersSelected].companyName,
+        clientId: customers[customersSelected].id,
+        topic: topic,
+        complement: complement,
+        status: status,
+        userId: user?.uid
+      })
+
+      resolve(result)
+      setLoadCustomers(false);
+
+    })
+
+
+  }
+
   useEffect(() => {
     async function loadUser() {
       const storageUserLocal = localStorage.getItem('@ticketsPRO')
@@ -226,6 +248,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser,
       registerCustomers,
       editProfile,
+      registerTicket,
     }}>
       {children}
     </AuthContext.Provider>
