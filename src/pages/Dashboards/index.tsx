@@ -16,6 +16,8 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { db } from "../../services/firebaseConn";
 
+import { format } from 'date-fns'
+
 const listRef = collection(db, 'tickets');
 
 export default function Dashboards() {
@@ -33,8 +35,8 @@ export default function Dashboards() {
     console.log('querySnapshot: ', querySnapshot.size)
     const isCollectionEmpty = querySnapshot?.size === 0;
 
-    if(!isCollectionEmpty){
-      let list: { id: any; topic: any; client: any; clientId: any; created: any; status: any; complement: any; }[] = [];
+    if (!isCollectionEmpty) {
+      let list: { id: any; topic: any; client: any; clientId: any; created: any; status: any; complement: any; createdFormat: any; }[] = [];
 
       querySnapshot.forEach((doc: any) => {
         list.push({
@@ -43,8 +45,9 @@ export default function Dashboards() {
           client: doc.data().client,
           clientId: doc.data().clientId,
           created: doc.data().created,
+          createdFormat: format(doc.data().created.toDate(), 'dd/MM/yyyy'),
           status: doc.data().status,
-          complement: doc.data().complement
+          complement: doc.data().complement,
         })
       });
 
@@ -54,9 +57,10 @@ export default function Dashboards() {
 
   useEffect(() => {
     async function getTickets() {
-      const q = query(listRef, orderBy('created', 'desc'),  limit(5));
+      const q = query(listRef, orderBy('created', 'desc'), limit(5));
 
       const querySnapshot = await getDocs(q)
+      setTickets([])
 
       updateState(querySnapshot)
 
@@ -65,8 +69,25 @@ export default function Dashboards() {
 
     getTickets();
 
-    return () => {}
-  },[])
+    return () => { }
+  }, [])
+
+  if(loadingTickets){
+    return (
+      <div>
+        <Sidebar />
+        <div className="content">
+          <Title name="Tickets">
+            <FiMessageSquare size={25} />
+          </Title>
+
+          <div className="container dashboards">
+            <span>Bucando chamados...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
 
   return (
@@ -111,24 +132,29 @@ export default function Dashboards() {
                 </thead>
 
                 <tbody>
-                  <tr>
-                    <td data-label='Cliente'> Mercado esquina</td>
-                    <td data-label='Suporte'> Suporte</td>
-                    <td data-label='Status'>
-                      <span className="badge" style={{ backgroundColor: '#999' }}>
-                        Em aberto
-                      </span>
-                    </td>
-                    <td data-label='Cadastrado'> 12/12/24</td>
-                    <td data-label='#'>
-                      <button className="action" style={{ backgroundColor: '#3583f3' }}>
-                        <FiSearch color="#fff" size={17} />
-                      </button>
-                      <button className="action" style={{ backgroundColor: '#f6a935' }}>
-                        <FiEdit2 color="#fff" size={17} />
-                      </button>
-                    </td>
-                  </tr>
+
+                  {tickets.map((item: any, index: any) => (
+                    <tr key={index}>
+                      <td data-label='Cliente'>{item?.client}</td>
+                      <td data-label='Suporte'> {item?.topic}</td>
+                      <td data-label='Status'>
+                        <span className="badge" style={{ backgroundColor: '#999' }}>
+                          {item?.status}
+                        </span>
+                      </td>
+                      {/* <td data-label='Cadastrado'>{item?.created}</td> */}
+                      <td data-label='Cadastrado'>{item?.createdFormat}</td>
+                      <td data-label='#'>
+                        <button className="action" style={{ backgroundColor: '#3583f3' }}>
+                          <FiSearch color="#fff" size={17} />
+                        </button>
+                        <button className="action" style={{ backgroundColor: '#f6a935' }}>
+                          <FiEdit2 color="#fff" size={17} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+
                 </tbody>
               </table>
             </>
