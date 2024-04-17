@@ -8,13 +8,12 @@ import './styles.css'
 import { useState } from "react";
 
 import useAuth from "../../hooks/useAuth";
-import { addDoc, collection } from "firebase/firestore";
+
 import { toast } from "react-toastify";
-import { db } from "../../services/firebaseConn";
 
 
 const NewTicket = () => {
-  const { user, customers, loadCustomers, registerTicket } = useAuth();
+  const { customers, loadCustomers, registerTicket } = useAuth();
 
 
   const [customersSelected, setCustomersSelected] = useState<any>(0);

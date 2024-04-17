@@ -195,7 +195,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function registerTicket(customersSelected: number, topic: string, complement: string, status: string) {
     setLoadCustomers(true);
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve) => {
       
       const result = await addDoc(collection(db, "tickets"), {
         created: new Date(),
