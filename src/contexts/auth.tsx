@@ -4,18 +4,21 @@ import { db, auth, storage } from "../services/firebaseConn";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { addDoc, collection, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore'
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 export const AuthContext = createContext({});
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
+
   const [user, setUser] = useState<any>(null);
   const [loadingAuth, setLoadingAuth] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [customers, setCustomers] = useState<any>([]);
   const [loadCustomers, setLoadCustomers] = useState(true);
+
+  const [listCustomers, setListCustomers] = useState<any>(null);
 
   const listRef = collection(db, 'customers');
 
@@ -184,6 +187,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setCustomers(list)
         setLoadCustomers(false)
+        setListCustomers(list);
 
       })
       .catch((error) => {
@@ -196,7 +200,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   async function registerTicket(customersSelected: number, topic: string, complement: string, status: string) {
     setLoadCustomers(true);
     return new Promise(async (resolve) => {
-      
+
       const result = await addDoc(collection(db, "tickets"), {
         created: new Date(),
         client: customers[customersSelected].companyName,
@@ -214,6 +218,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   }
+
 
   useEffect(() => {
     async function loadUser() {
@@ -241,6 +246,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       customers,
       loadCustomers,
+      listCustomers,
       signIn,
       signUp,
       logout,

@@ -5,15 +5,19 @@ import Title from "../Title";
 import { FiPlusCircle } from 'react-icons/fi'
 
 import './styles.css'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import useAuth from "../../hooks/useAuth";
 
 import { toast } from "react-toastify";
+import { useParams } from "react-router-dom";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../services/firebaseConn";
 
 
 const NewTicket = () => {
-  const { customers, loadCustomers, registerTicket } = useAuth();
+  const { customers, loadCustomers, registerTicket, listCustomers } = useAuth();
+  const { id } = useParams()
 
 
   const [customersSelected, setCustomersSelected] = useState<any>(0);
@@ -21,6 +25,7 @@ const NewTicket = () => {
   const [complement, setComplement] = useState('');
   const [topic, setTopic] = useState('Suporte');
   const [status, setStatus] = useState('Aberto');
+  const [idCustomer, setIdCustomer] = useState(false);
 
   function handleOptionChange(e: any) {
     setStatus(e.target.value);
@@ -39,6 +44,11 @@ const NewTicket = () => {
   async function handleRegisterTicket(e: any) {
     e.preventDefault();
 
+    if (idCustomer) {
+      alert('Editando, só o filé!!!')
+      return
+    }
+
     try {
       await registerTicket(customersSelected, topic, complement, status)
 
@@ -50,26 +60,33 @@ const NewTicket = () => {
       toast.error("Ops erro ao registrar, tente mais tarde!")
     }
 
-    //Registrar um chamado
-    // await addDoc(collection(db, "chamados"), {
-    //   created: new Date(),
-    //   client: customers[customersSelected].companyName,
-    //   clientId: customers[customersSelected].id,
-    //   topic: topic,
-    //   complement: complement,
-    //   status: status,
-    //   userId: user?.uid
-    // })
-    //   .then(() => {
-    //     toast.success("Chamado registrado!")
-    //     setComplement('')
-    //     setCustomersSelected(0)
-    //   })
-    //   .catch((error) => {
-    //     toast.error("Ops erro ao registrar, tente mais tarde!")
-    //     console.log(error);
-    //   })
   }
+
+  async function loadId(listCustomers: any, id: any) {
+    const docRef = doc(db, 'tickets', id);
+    await getDoc(docRef)
+      .then((snapShot: any) => {
+        setTopic(snapShot.data().topic);
+        setStatus(snapShot.data().status);
+        setComplement(snapShot.data().complement);
+
+        let index = listCustomers.findIndex((item: any) => item.id === snapShot.data().clientId);
+
+        setCustomersSelected(index);
+
+        setIdCustomer(true);
+
+      })
+      .catch((error: any) => {
+        console.log('', error)
+      })
+  }
+
+  useEffect(() => {
+    if (id) {
+      loadId(listCustomers, id)
+    }
+  }, [id])
 
 
   return (
@@ -144,7 +161,7 @@ const NewTicket = () => {
               placeholder="Descreva seu problema (Opcional)"
             />
 
-            <button type="submit" style={{backgroundColor: loadCustomers && 'gray'}} disabled={loadCustomers}>
+            <button type="submit" style={{ backgroundColor: loadCustomers && 'gray' }} disabled={loadCustomers}>
               {
                 loadCustomers ? 'Carregando...' : 'Registrar'
               }
