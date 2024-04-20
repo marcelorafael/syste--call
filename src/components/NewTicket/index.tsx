@@ -10,14 +10,15 @@ import { useEffect, useState } from "react";
 import useAuth from "../../hooks/useAuth";
 
 import { toast } from "react-toastify";
-import { useParams } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import { useNavigate, useParams } from "react-router-dom";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../services/firebaseConn";
 
 
 const NewTicket = () => {
-  const { customers, loadCustomers, registerTicket, listCustomers } = useAuth();
-  const { id } = useParams()
+  const { customers, loadCustomers, registerTicket, listCustomers, user } = useAuth();
+  const { id }: string | any = useParams()
+  const navigate = useNavigate()
 
 
   const [customersSelected, setCustomersSelected] = useState<any>(0);
@@ -45,7 +46,25 @@ const NewTicket = () => {
     e.preventDefault();
 
     if (idCustomer) {
-      alert('Editando, só o filé!!!')
+      const docRef = doc(db, 'tickets', id);
+      await updateDoc(docRef, {
+        client: customers[customersSelected].companyName,
+        clientId: customers[customersSelected].id,
+        topic: topic,
+        complement: complement,
+        status: status,
+        userId: user?.uid
+      })
+      .then(() => {
+        toast.info('Chamado atualizado com sucesso!');
+        setCustomersSelected(0);
+        setComplement('');
+        navigate('/dashboards')
+      })
+      .catch((error: any) => {
+        toast.error('Erro ao atualizar este chamado!');
+        console.log(error)
+      })
       return
     }
 
@@ -87,14 +106,12 @@ const NewTicket = () => {
       loadId(listCustomers, id)
     }
   }, [id])
-
-
   return (
     <div>
       <Sidebar />
 
       <div className="content">
-        <Title name="Novo chamado">
+        <Title name={id ? `Edição - ${customers[customersSelected]?.companyName}` : 'Novo chamado'}>
           <FiPlusCircle size={25} />
         </Title>
 

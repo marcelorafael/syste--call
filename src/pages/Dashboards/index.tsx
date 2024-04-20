@@ -18,6 +18,8 @@ import { db } from "../../services/firebaseConn";
 
 import { format } from 'date-fns'
 
+import Modal from "../../components/Modal";
+
 const listRef = collection(db, 'tickets');
 
 export default function Dashboards() {
@@ -185,6 +187,7 @@ export default function Dashboards() {
 
         </>
       </div>
+      <Modal />
     </div>
   );
 }
