@@ -2,13 +2,21 @@
 import './styles.css';
 import { FiX } from 'react-icons/fi'
 
-export default function Modal() {
+interface ModalProps {
+    content?: any;
+    close?: () => void;
+}
+
+export default function Modal({
+    content,
+    close
+}:ModalProps) {
+
     return (
         <div className="modal">
             <div className="container">
-                <button className="close">
+                <button className="close" onClick={close}>
                     <FiX size={25} color='#000' />
-                    {/* Fechar */}
                 </button>
 
                 <main>
@@ -16,29 +24,29 @@ export default function Modal() {
 
                     <div className='row'>
                         <span>
-                            Clientes: <i>Mercado</i>
+                            Clientes: <i>{content?.client}</i>
                         </span>
                     </div>
 
                     <div className='row'>
                         <span>
-                            Assunto: <i>Suporte</i>
+                            Assunto: <i>{content?.topic}</i>
                         </span>
                         <span>
-                            Cadastrado em: <i>22/03/2024</i>
+                            Cadastrado em: <i>{content?.createdFormat}</i>
                         </span>
                     </div>
 
                     <div className='row'>
-                        <span>
-                            Status: <i>Aberto</i>
+                        <span >
+                            Status: <i style={{ backgroundColor: content?.status === 'Aberto' ? '#5cb85c' : content?.status === 'Progresso' ? '#f6a935' : '#999', borderRadius: 5, color: '#fff' }}>{content?.status}</i>
                         </span>
                     </div>
 
                     <>
                         <h3>Complemento</h3>
                         <p>
-                            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias delectus suscipit, ipsum itaque facilis deserunt ea debitis error quo autem earum quos voluptatem illo ducimus, eum accusantium exercitationem a? Illum!
+                            {content?.complement !== '' ? content?.complement : '-- Sem detalhes --'}
                         </p>
                     </>
 

@@ -9,6 +9,8 @@ import './styles.css'
 import useAuth from "../../hooks/useAuth";
 
 import { FiMessageSquare, FiPlus, FiSearch, FiEdit2 } from 'react-icons/fi'
+import { BiSolidMessageAltDetail } from 'react-icons/bi'
+
 import { Link } from "react-router-dom";
 
 import useToast from "../../hooks/useToast";
@@ -31,6 +33,9 @@ export default function Dashboards() {
 
   const [lastDocs, setLastDocs] = useState('');
   const [loadingMore, setLoadingMore] = useState(false);
+
+  const [showPostModal, setShowPostModal] = useState(false);
+  const [detail, setDetail] = useState();
 
   async function handleLogout() {
     await logout()
@@ -75,6 +80,11 @@ export default function Dashboards() {
     const querySnaṕshot = await getDocs(q);
     await updateState(querySnaṕshot);
 
+  }
+
+  function handleToggleModal(item: any){
+    setShowPostModal(!showPostModal);
+    setDetail(item);
   }
 
   useEffect(() => {
@@ -167,8 +177,8 @@ export default function Dashboards() {
                       {/* <td data-label='Cadastrado'>{item?.created}</td> */}
                       <td data-label='Cadastrado'>{item?.createdFormat}</td>
                       <td data-label='#'>
-                        <button className="action" style={{ backgroundColor: '#3583f3' }}>
-                          <FiSearch color="#fff" size={17} />
+                        <button className="action" style={{ backgroundColor: '#3583f3' }} onClick={() => handleToggleModal(item)}>
+                          <BiSolidMessageAltDetail color="#fff" size={17} />
                         </button>
                         <Link to={`/newTicket/${item?.id}`} className="action" style={{ backgroundColor: '#f6a935' }}>
                           <FiEdit2 color="#fff" size={17} />
@@ -187,7 +197,13 @@ export default function Dashboards() {
 
         </>
       </div>
-      <Modal />
+      
+      {showPostModal && (
+        <Modal
+          content={detail}
+          close={() => setShowPostModal(!showPostModal)}
+        />
+      )}
     </div>
   );
 }
