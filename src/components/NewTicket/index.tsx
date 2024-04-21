@@ -5,24 +5,28 @@ import Title from "../Title";
 import { FiPlusCircle } from 'react-icons/fi'
 
 import './styles.css'
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import useAuth from "../../hooks/useAuth";
-import { collection, getDocs, getDoc, doc } from "firebase/firestore";
-import { db } from "../../services/firebaseConn";
 
-const listRef = collection(db, 'customers')
+import { toast } from "react-toastify";
+import { useNavigate, useParams } from "react-router-dom";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "../../services/firebaseConn";
 
 
 const NewTicket = () => {
-  const { user } = useAuth();
+  const { customers, loadCustomers, registerTicket, listCustomers, user } = useAuth();
+  const { id }: string | any = useParams()
+  const navigate = useNavigate()
 
-  const [customers, setCustomers] = useState<any>([]);
+
   const [customersSelected, setCustomersSelected] = useState<any>(0);
-  const [loadCustomers, setLoadCustomers] = useState(true);
+
   const [complement, setComplement] = useState('');
   const [topic, setTopic] = useState('Suporte');
   const [status, setStatus] = useState('Aberto');
+  const [idCustomer, setIdCustomer] = useState(false);
 
   function handleOptionChange(e: any) {
     setStatus(e.target.value);
@@ -33,56 +37,87 @@ const NewTicket = () => {
     setTopic(e.target.value);
   }
 
-  async function getCustomers() {
-    const querySnapshot = await getDocs(listRef)
-      .then((snapshot) => {
-        let list: any = [];
-
-        snapshot.forEach((doc) => {
-          list.push({
-            id: doc.id,
-            companyName: doc.data().companyName
-          })
-        })
-
-        if (snapshot.docs.length === 0) {
-          console.log('Nenhum cliente encontrado.')
-          setCustomers([{ id: 1, nomeFantasia: 'Freela' }])
-          setLoadCustomers(false)
-          return
-        }
-
-        setCustomers(list)
-        setLoadCustomers(false)
-
-      })
-      .catch((error) => {
-        console.log('Erro ao buscar os clientes', error)
-        setLoadCustomers(false);
-        setCustomers([{ id: 1, nomeFantasia: 'Freela' }])
-      })
-  }
 
   function handleChangeCustomers(e: any) {
     setCustomersSelected(e.target.value)
   }
 
-  useEffect(() => {
-    getCustomers()
-  }, [])
+  async function handleRegisterTicket(e: any) {
+    e.preventDefault();
 
+    if (idCustomer) {
+      const docRef = doc(db, 'tickets', id);
+      await updateDoc(docRef, {
+        client: customers[customersSelected].companyName,
+        clientId: customers[customersSelected].id,
+        topic: topic,
+        complement: complement,
+        status: status,
+        userId: user?.uid
+      })
+      .then(() => {
+        toast.info('Chamado atualizado com sucesso!');
+        setCustomersSelected(0);
+        setComplement('');
+        navigate('/dashboards')
+      })
+      .catch((error: any) => {
+        toast.error('Erro ao atualizar este chamado!');
+        console.log(error)
+      })
+      return
+    }
+
+    try {
+      await registerTicket(customersSelected, topic, complement, status)
+
+      toast.success("Chamado registrado!")
+      setComplement('')
+      setCustomersSelected(0)
+    } catch (error) {
+      console.log('Erro a registrar chamado!', error)
+      toast.error("Ops erro ao registrar, tente mais tarde!")
+    }
+
+  }
+
+  async function loadId(listCustomers: any, id: any) {
+    const docRef = doc(db, 'tickets', id);
+    await getDoc(docRef)
+      .then((snapShot: any) => {
+        setTopic(snapShot.data().topic);
+        setStatus(snapShot.data().status);
+        setComplement(snapShot.data().complement);
+
+        let index = listCustomers.findIndex((item: any) => item.id === snapShot.data().clientId);
+
+        setCustomersSelected(index);
+
+        setIdCustomer(true);
+
+      })
+      .catch((error: any) => {
+        console.log('', error)
+      })
+  }
+
+  useEffect(() => {
+    if (id) {
+      loadId(listCustomers, id)
+    }
+  }, [id])
   return (
     <div>
       <Sidebar />
 
       <div className="content">
-        <Title name="Novo chamado">
+        <Title name={id ? `Edição - ${customers[customersSelected]?.companyName}` : 'Novo chamado'}>
           <FiPlusCircle size={25} />
         </Title>
 
         <div className="container">
 
-          <form className="form-profile">
+          <form className="form-profile" onSubmit={handleRegisterTicket}>
 
             <label>Clientes</label>
             {
@@ -143,7 +178,11 @@ const NewTicket = () => {
               placeholder="Descreva seu problema (Opcional)"
             />
 
-            <button type="submit">Registrar</button>
+            <button type="submit" style={{ backgroundColor: loadCustomers && 'gray' }} disabled={loadCustomers}>
+              {
+                loadCustomers ? 'Carregando...' : 'Registrar'
+              }
+            </button>
 
           </form>
 

@@ -2,196 +2,263 @@ import React, { useState, useEffect, createContext } from "react";
 
 import { db, auth, storage } from "../services/firebaseConn";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth'
-import { addDoc, collection, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import { addDoc, collection, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore'
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 export const AuthContext = createContext({});
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<any>(null);
-    const [loadingAuth, setLoadingAuth] = useState(false);
-    const [loading, setLoading] = useState(true);
 
-    const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+  const [loadingAuth, setLoadingAuth] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        async function loadUser() {
-            const storageUserLocal = localStorage.getItem('@ticketsPRO')
+  const [customers, setCustomers] = useState<any>([]);
+  const [loadCustomers, setLoadCustomers] = useState(true);
 
-            if (storageUserLocal) {
-                setUser(JSON.parse(storageUserLocal))
-                setLoading(false);
+  const [listCustomers, setListCustomers] = useState<any>(null);
+
+  const listRef = collection(db, 'customers');
+
+  const navigate = useNavigate();
+
+
+  async function signIn(email: string, password: string) {
+    setLoadingAuth(true);
+
+    await signInWithEmailAndPassword(auth, email, password)
+      .then(async (value) => {
+        let uid = value.user.uid;
+
+        const docRef = doc(db, "users", uid);
+        const docSnap = await getDoc(docRef)
+
+        let data = {
+          uid: uid,
+          name: docSnap?.data()?.name,
+          email: value.user.email,
+          avatarUrl: docSnap?.data()?.avatarUrl
+        }
+
+        setUser(data);
+        storageUser(data);
+        setLoadingAuth(false);
+
+        navigate("/dashboards")
+      })
+      .catch((error) => {
+        console.log(error);
+        setLoadingAuth(false);
+      })
+
+  }
+
+  async function signUp(name: string, email: string, password: string) {
+    setLoadingAuth(true);
+
+    await createUserWithEmailAndPassword(auth, email, password)
+      .then(async value => {
+        let uid = value.user.uid;
+
+        await setDoc(doc(db, 'users', uid), {
+          name: name,
+          avatarUrl: null,
+        })
+          .then(() => {
+            let data = {
+              uid: uid,
+              name: name,
+              email: value.user.email,
+              avatarUrl: null
+            };
+
+            setUser(data);
+            storageUser(data)
+            setLoadingAuth(false);
+
+            navigate('/dashboards')
+          })
+      })
+      .catch(error => {
+        setLoadingAuth(false);
+      })
+  }
+
+
+  function storageUser(data: any) {
+    localStorage.setItem('@ticketsPRO', JSON.stringify(data))
+  }
+
+  async function logout() {
+    await signOut(auth);
+    localStorage.removeItem('@ticketsPRO');
+    setUser(null);
+  }
+
+  async function registerCustomers(companyName: string, cnpj: string, address: string) {
+
+    await addDoc(collection(db, 'customers'), {
+      companyName: companyName,
+      cnpj: cnpj,
+      address: address,
+    })
+
+
+  }
+
+  async function handleUpload(imageAvatar: any, name: string) {
+    const currentUid = user?.uid;
+
+    const uploadRef = ref(storage, `images/${currentUid}/${imageAvatar?.name}`)
+
+    const uploadTask = uploadBytes(uploadRef, imageAvatar)
+      .then((snapshot) => {
+        getDownloadURL(snapshot.ref).then(async (downloadURL) => {
+          let urlPhoto = downloadURL;
+
+          const docRef = doc(db, 'users', user?.uid)
+          await updateDoc(docRef, {
+            avatarUrl: urlPhoto,
+            name: name,
+          }).then(() => {
+            let data = {
+              ...user,
+              name: name,
+              avatarUrl: urlPhoto
             }
 
+            setUser(data)
+            storageUser(data)
 
-            setLoading(false);
+          })
+        })
+      })
+      .catch((error) => {
+        console.log('Error uploadoc: ', error)
+      })
+  }
 
-        }
+  async function editProfile(imageAvatar: any, name: string) {
 
-        loadUser();
-    }, [])
+    if (imageAvatar === null && name !== '') {
 
+      const docRef = doc(db, 'users', user?.uid)
+      updateDoc(docRef, {
+        name: name
+      })
+        .then(() => {
+          let data = {
+            ...user,
+            name: name
+          }
 
-    async function signIn(email: string, password: string) {
-        setLoadingAuth(true);
+          setUser(data)
+          storageUser(data)
 
-        await signInWithEmailAndPassword(auth, email, password)
-            .then(async (value) => {
-                let uid = value.user.uid;
-
-                const docRef = doc(db, "users", uid);
-                const docSnap = await getDoc(docRef)
-
-                let data = {
-                    uid: uid,
-                    name: docSnap?.data()?.name,
-                    email: value.user.email,
-                    avatarUrl: docSnap?.data()?.avatarUrl
-                }
-
-                setUser(data);
-                storageUser(data);
-                setLoadingAuth(false);
-
-                navigate("/dashboards")
-            })
-            .catch((error) => {
-                console.log(error);
-                setLoadingAuth(false);
-            })
-
+        })
+        .catch((error) => {
+          console.log('error edit profile: ', error)
+        })
+    } else if (name !== '' && imageAvatar !== null) {
+      handleUpload(imageAvatar, name)
     }
+  }
 
-    async function signUp(name: string, email: string, password: string) {
-        setLoadingAuth(true);
+  async function getCustomers() {
+    const querySnapshot = await getDocs(listRef)
+      .then((snapshot: any) => {
+        let list: any = [];
 
-        await createUserWithEmailAndPassword(auth, email, password)
-            .then(async value => {
-                let uid = value.user.uid;
-
-                await setDoc(doc(db, 'users', uid), {
-                    name: name,
-                    avatarUrl: null,
-                })
-                    .then(() => {
-                        let data = {
-                            uid: uid,
-                            name: name,
-                            email: value.user.email,
-                            avatarUrl: null
-                        };
-
-                        setUser(data);
-                        storageUser(data)
-                        setLoadingAuth(false);
-
-                        navigate('/dashboards')
-                    })
-            })
-            .catch(error => {
-                setLoadingAuth(false);
-            })
-    }
-
-
-    function storageUser(data: any) {
-        localStorage.setItem('@ticketsPRO', JSON.stringify(data))
-    }
-
-    async function logout() {
-        await signOut(auth);
-        localStorage.removeItem('@ticketsPRO');
-        setUser(null);
-    }
-
-    async function registerCustomers(companyName: string, cnpj: string, address: string) {
-
-        await addDoc(collection(db, 'customers'), {
-            companyName: companyName,
-            cnpj: cnpj,
-            address: address,
+        snapshot.forEach((doc: any) => {
+          list.push({
+            id: doc.id,
+            companyName: doc.data().companyName
+          })
         })
 
+        if (snapshot.docs.length === 0) {
+          console.log('Nenhum cliente encontrado.')
+          setCustomers([{ id: 1, nomeFantasia: 'Freela' }])
+          setLoadCustomers(false)
+          return
+        }
+
+        setCustomers(list)
+        setLoadCustomers(false)
+        setListCustomers(list);
+
+      })
+      .catch((error) => {
+        console.log('Erro ao buscar os clientes', error)
+        setLoadCustomers(false);
+        setCustomers([{ id: 1, nomeFantasia: 'Freela' }])
+      })
+  }
+
+  async function registerTicket(customersSelected: number, topic: string, complement: string, status: string) {
+    setLoadCustomers(true);
+    return new Promise(async (resolve) => {
+
+      const result = await addDoc(collection(db, "tickets"), {
+        created: new Date(),
+        client: customers[customersSelected].companyName,
+        clientId: customers[customersSelected].id,
+        topic: topic,
+        complement: complement,
+        status: status,
+        userId: user?.uid
+      })
+
+      resolve(result)
+      setLoadCustomers(false);
+
+    })
+
+
+  }
+
+
+  useEffect(() => {
+    async function loadUser() {
+      const storageUserLocal = localStorage.getItem('@ticketsPRO')
+
+      if (storageUserLocal) {
+        setUser(JSON.parse(storageUserLocal))
+        setLoading(false);
+      }
+
+
+      setLoading(false);
 
     }
 
-    async function handleUpload(imageAvatar: any, name: string) {
-        const currentUid = user?.uid;
-    
-        const uploadRef = ref(storage, `images/${currentUid}/${imageAvatar?.name}`)
-    
-        const uploadTask = uploadBytes(uploadRef, imageAvatar)
-          .then((snapshot) => {
-            getDownloadURL(snapshot.ref).then(async (downloadURL) => {
-              let urlPhoto = downloadURL;
-    
-              const docRef = doc(db, 'users', user?.uid)
-              await updateDoc(docRef, {
-                avatarUrl: urlPhoto,
-                name: name,
-              }).then(() => {
-                let data = {
-                  ...user,
-                  name: name,
-                  avatarUrl: urlPhoto
-                }
-    
-                setUser(data)
-                storageUser(data)
-    
-              })
-            })
-          })
-          .catch((error) => {
-            console.log('Error uploadoc: ', error)
-          })
-      }
-    
-      async function editProfile(imageAvatar: any, name: string) {
-    
-        if (imageAvatar === null && name !== '') {
-    
-          const docRef = doc(db, 'users', user?.uid)
-          updateDoc(docRef, {
-            name: name
-          })
-            .then(() => {
-              let data = {
-                ...user,
-                name: name
-              }
-    
-              setUser(data)
-              storageUser(data)
-    
-            })
-            .catch((error) => {
-                console.log('error edit profile: ',error)
-            })
-        } else if (name !== '' && imageAvatar !== null) {
-          handleUpload(imageAvatar, name)
-        }
-      }
+    loadUser();
+    getCustomers();
+  }, [])
 
-    return (
-        <AuthContext.Provider value={{
-            signed: !!user,
-            user,
-            loadingAuth,
-            loading,
-            signIn,
-            signUp,
-            logout,
-            storageUser,
-            setUser,
-            registerCustomers,
-            editProfile,
-        }}>
-            {children}
-        </AuthContext.Provider>
-    )
+  return (
+    <AuthContext.Provider value={{
+      signed: !!user,
+      user,
+      loadingAuth,
+      loading,
+      customers,
+      loadCustomers,
+      listCustomers,
+      signIn,
+      signUp,
+      logout,
+      storageUser,
+      setUser,
+      registerCustomers,
+      editProfile,
+      registerTicket,
+    }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export default AuthProvider
